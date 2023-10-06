@@ -1,5 +1,6 @@
 const getConnection = require('./connection.js');
 const bcrypt = require('bcrypt');
+const Jwt = require('jsonwebtoken');
 
 async function getUsers(){
     console.log('getusers');
@@ -27,4 +28,16 @@ async function findByCredentials(email, password){
     return user;
 }
 
-module.exports = getUsers, findByCredentials;
+function generateAuthToken(user){
+    const token = Jwt.sign({_id: user._id, email: user.email, username: user.username}, "clavesecreta");
+    return token;
+}
+
+async function addUser(user){
+    user.password  = await bcrypt.hash(user.password, 8);
+    const connection = await getConnection();
+    const result = await connection.db("sample_tp2").collection("users").insertOne(user);
+    return result;
+}
+
+module.exports = {getUsers, findByCredentials, generateAuthToken, addUser};
